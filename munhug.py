@@ -90,15 +90,17 @@ def ssh_conn(ip):
                 time.sleep(2)
                 open_creds.close()
 
+                #Deal with pager
                 connection.send("set cli screen-length 0\n")
 
+                #Send commands
                 open_commands = open(ssh_commands, 'r')
                 open_commands.seek(0)
-
                 for each_line in open_commands.readlines():
                         connection.send(each_line + '\n')
                         time.sleep(5)
 
+                #Catch output
                 device_output = connection.recv(65535)
                 open_commands.close()
 
@@ -110,7 +112,7 @@ def ssh_conn(ip):
                 else:
                         print "Done for device %s" % ip
 
-                #Search for host info
+                #Update host info
                 ext_dev_hostname = re.search(r"Hostname: (.+)", device_output)
                 ext_dev_model = re.search(r"Model: (.+)", device_output)
                 ext_dev_os = re.search(r"--- JUNOS (.+) built", device_output)
@@ -118,31 +120,31 @@ def ssh_conn(ip):
                 dev_model = ext_dev_model.group(1)
                 dev_os = ext_dev_os.group(1)
  
-		#Update host
                 host_update_query = "UPDATE Hosts SET Hostname = %s, Model = %s, DeviceOS = %s WHERE MgmtAddress = %s"
                 sql_updater(host_update_query,(dev_hostname,dev_model,dev_os,ip))
 
-                #Search for interfaces descs
+                #Filter unit descriptions
                 ext_iface_desc_values = re.findall(r"set interfaces (.+) unit (.+) description (.+?)\r", device_output)
-					
-		#Search host ID
-                hostId_query = "SELECT HostID FROM Hosts WHERE MgmtAddress = '" + ip + "'"
+
+                #Get host ID
+				hostId_query = "SELECT HostID FROM Hosts WHERE MgmtAddress = '" + ip + "'"
                 hostId = sql_request(hostId_query)[0][0]
 		
+        #Gather info from each unit found
 		for each_unit in ext_iface_desc_values:
 			serviceIf = str(each_unit[0])
-			
 			unitNum = str(each_unit[1])
-			
 			unitDesc = str(each_unit[2])
 			
-			id_sep = re.search(r"^.*(\D{3}\d{3}).*$",unitDesc)
-			serviceIus = ''
-			if id_sep:
-				serviceIus = str(id_sep.group(1))
+            #Search unit description for unique service identifiers in a "abc123" style
+			ext_ius = re.search(r"^.*(\D{3}\d{3}).*$",unitDesc)
+			serviceUid = ''
+			if ext_ius:
+				serviceUid = str(ext_ius.group(1))
 			else:
-				serviceIus = 'Unknown'
+				serviceUid = 'Unknown'
 				
+            #Search for VLAN configurations
 			vlan_rx_id = r"set interfaces " + re.escape(serviceIf) + r" unit " + re.escape(unitNum) + r" (vlan-id|vlan-id-list|vlan-tags outer) (.+?)\r"
 			ext_vlan_id = re.search(vlan_rx_id, device_output)
 			servVlanType = ''
@@ -154,6 +156,7 @@ def ssh_conn(ip):
                                	serviceVlan = 'Not Set'
                                	servVlanType = 'Not Set'
 
+            #Search for bandwidth policers in a "plc-bw-XXXm/g" style
 			bw_pol_rx = r"set interfaces " + re.escape(serviceIf) + r" unit " + re.escape(unitNum) + r" family (.+) policer output (plc-bw-(\d+?)(\D+?))\r"
 			ext_bw = re.search(bw_pol_rx, device_output)
 			serviceBwPol = ''
@@ -168,6 +171,7 @@ def ssh_conn(ip):
 				serviceBwPol = 'Not Set'
 				serviceBw = None
 
+            #Search for assigned bandwidth description
 			bw_desc_rx = r"set interfaces " + re.escape(serviceIf) + r" unit " + re.escape(unitNum) + r" bandwidth ((\d+?)(\D+?))\r"
 			ext_bw_desc = re.search(bw_desc_rx, device_output)
 			serviceBwDesc = ''
@@ -178,23 +182,13 @@ def ssh_conn(ip):
 			else:
 				serviceBwDesc = None
 			
-			#if serviceBwDesc != None:
-			#	print serviceBwDesc
-
-						
-			#print str(hostId) + " " + serviceIf + " " + unitDesc + " " + unitNum + " " + serviceIus
-			#print unitDesc
-			#print servVlanType
-			#print serviceVlan
-			#print serviceBw
-			
+            #Search for disabled and deactivated configurations
 			disable_rx = r"set interfaces " + re.escape(serviceIf) + r" unit " + re.escape(unitNum) + r" disable\r"
 			ext_disable = re.search(disable_rx,device_output)
-
 			deactivate_rx = r"deactivate interfaces " + re.escape(serviceIf) + r" unit " + re.escape(unitNum) + r"\r"
 			ext_deactivate = re.search(deactivate_rx,device_output)
 			
-			if serviceIus == 'Unknown':
+			if serviceUid == 'Unknown':
 				state = 'Not a service'
 			else:
 				state = 'Active'
@@ -202,32 +196,43 @@ def ssh_conn(ip):
 				state = 'Disabled'
 			if ext_deactivate:
 				state = 'Deactivated'
-			
-			sql_updater('INSERT INTO Units (Host_ID,IfName,UnitNum,UnitDesc,ServiceIus,Vlan_Type,Vlan_ID,BW_Policy,BW_Speed,BW_Desc,State) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE UnitDesc=%s, ServiceIus=%s, Vlan_Type=%s, Vlan_ID=%s, BW_Policy=%s, BW_Speed=%s, BW_Desc=%s, State=%s',(hostId,serviceIf,unitNum,unitDesc,serviceIus,servVlanType,serviceVlan,serviceBwPol,serviceBw,serviceBwDesc,state,unitDesc,serviceIus,servVlanType,serviceVlan,serviceBwPol,serviceBw,serviceBwDesc,state))
+
+            #Some basic tests
+            #if serviceBwDesc != None:
+            #   print serviceBwDesc
+            #print str(hostId) + " " + serviceIf + " " + unitDesc + " " + unitNum + " " + serviceUid
+            #print unitDesc
+            #print servVlanType
+            #print serviceVlan
+            #print serviceBw
+            
+    		sql_updater('INSERT INTO Units (Host_ID,IfName,UnitNum,UnitDesc,ServiceIus,Vlan_Type,Vlan_ID,BW_Policy,BW_Speed,BW_Desc,State) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE UnitDesc=%s, ServiceIus=%s, Vlan_Type=%s, Vlan_ID=%s, BW_Policy=%s, BW_Speed=%s, BW_Desc=%s, State=%s',(hostId,serviceIf,unitNum,unitDesc,serviceUid,servVlanType,serviceVlan,serviceBwPol,serviceBw,serviceBwDesc,state,unitDesc,serviceUid,servVlanType,serviceVlan,serviceBwPol,serviceBw,serviceBwDesc,state))
 
 
-                #Check for erased services
-                saved_services_query = 'SELECT IfName,UnitNum,UnitDesc FROM Units WHERE Host_ID = ' + str(hostId)  + ' AND State NOT LIKE "Removed%"'
-                saved_services = sql_request(saved_services_query)
-		for each_saved in saved_services:
-			if each_saved not in ext_iface_desc_values:
-				ifInactive = each_saved[0]
-				unitInactive = each_saved[1]
-				descInactive = each_saved[2]
+            #Check for erased interface, unit numer, unit description.
+        saved_services_query = 'SELECT IfName,UnitNum,UnitDesc FROM Units WHERE Host_ID = ' + str(hostId)  + ' AND State NOT LIKE "Removed%"'
+        saved_services = sql_request(saved_services_query)
+        for each_saved in saved_services:
+            if each_saved not in ext_iface_desc_values:
+                ifInactive = each_saved[0]
+                unitInactive = each_saved[1]
+                descInactive = each_saved[2]
 				date_removed = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M')
 				state = 'Removed on ' + date_removed
 				sql_updater('UPDATE Units SET State=%s WHERE IfName=%s AND UnitNum=%s AND UnitDesc=%s',(state,ifInactive,unitInactive,descInactive))
-		
-                #print device_output + "\n"
+            
+        #print device_output + "\n"
 
-                #Close SSH session
-                session.close()
+        #Close SSH session
+        session.close()
 
-        except paramiko.AuthenticationException:
-                print "Invalid username or password on device %s" % ip
-                print "Closing program."
-                check_sql = False
+    #Catch SSH authentication exceptions
+    except paramiko.AuthenticationException:
+            print "Invalid username or password on device %s" % ip
+            print "Closing program."
+            check_sql = False
 
+#Threading
 def create_threads():
         global global_ip_list
         threads = []
@@ -238,13 +243,16 @@ def create_threads():
         for th in threads:
                 th.join()
 
+#Gather hosts from DB
 hosts_query = "SELECT MgmtAddress FROM Hosts"
 saved_hosts = sql_request(hosts_query)
 for ip_addr in saved_hosts:
         global_ip_list.append(ip_addr[0])
 
+#Execute program to all hosts
 create_threads()
 
+#Check for SQL errors
 if check_sql == True:
     print "\nAll parameters were successfully exported to MySQL."
 else:
