@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 '''
-Brief description: This program connects to a device running JUNOS and exports interfaces information to a mySQL database.
+Connects to a device running JUNOS and export device and interfaces configuration information to a mySQL database.
+
 Use: "python filename sshcredentialsfile commandsfile sqlcredentialsfile"
-- SSH and SQL credentials provided in plain text, separated with ",". No whitespaces.
+- SSH and SQL credentials provided in plain text, comma (',') separated, no whitespaces.
 - JUNOS commands provided one per line in a "| display set" fashion.
 '''
 
+#Imports
 import MySQLdb
 import paramiko
 import threading
@@ -71,16 +73,16 @@ def sql_updater(command,values):
         open_sql_file.close()
 
 def ssh_conn(ip):
+        ssh_credentials = sys.argv[1]
+        ssh_commands = sys.argv[2]
+
+        open_creds = open(ssh_credentials, 'r')
+        open_creds.seek(0)
+        username = open_creds.readlines()[0].split(',')[0]
+        open_creds.seek(0)
+        password = open_creds.readlines()[0].split(',')[1].rstrip("\n")
+        #Start SSH Connection
         try:
-                ssh_credentials = sys.argv[1]
-                ssh_commands = sys.argv[2]
-
-                open_creds = open(ssh_credentials, 'r')
-                open_creds.seek(0)
-                username = open_creds.readlines()[0].split(',')[0]
-                open_creds.seek(0)
-                password = open_creds.readlines()[0].split(',')[1].rstrip("\n")
-
                 session = paramiko.SSHClient()
                 session.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 session.connect(ip,username = username, password = password)
