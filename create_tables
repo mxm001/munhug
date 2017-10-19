@@ -1,0 +1,29 @@
+CREATE TABLE Hosts (
+    HostID int NOT NULL AUTO_INCREMENT,
+    Hostname VARCHAR(15),
+    MgmtAddress VARCHAR(20) NOT NULL,
+    Model VARCHAR(20),
+    DeviceOS VARCHAR(20),
+    State VARCHAR(20),
+    UNIQUE (MgmtAddress),
+    CONSTRAINT PK_Host PRIMARY KEY (HostID,MgmtAddress)	
+);
+
+CREATE TABLE `Units` (
+  `UnitID` int(11) NOT NULL AUTO_INCREMENT,
+  `Host_ID` int(11) NOT NULL,
+  `IfName` varchar(20) DEFAULT NULL,
+  `UnitNum` varchar(11) DEFAULT NULL,
+  `UnitDesc` varchar(40) DEFAULT NULL,
+  `ServiceIus` varchar(10) DEFAULT NULL,
+  `Vlan_Type` varchar(40) DEFAULT NULL,
+  `Vlan_ID` varchar(20) DEFAULT NULL,
+  `BW_Policy` varchar(20) DEFAULT NULL,
+  `BW_Speed` int(10) unsigned DEFAULT NULL,
+  `BW_Desc` int(10) unsigned DEFAULT NULL,
+  `State` varchar(40) DEFAULT NULL,
+  PRIMARY KEY (`UnitID`),
+  UNIQUE KEY `UQ_Service` (`Host_ID`,`IfName`,`UnitNum`),
+  FOREIGN KEY (`Host_ID`) REFERENCES `Hosts` (`HostID`)
+);
+
