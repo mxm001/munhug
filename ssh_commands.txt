@@ -1,9 +1,6 @@
 show version
 show configuration interfaces | display set | match unit | match description
-show configuration interfaces | display set | match "policer output"
 show configuration interfaces | display set | match bandwidth
-show configuration interfaces | display set | match vlan-id
-show configuration interfaces | display set | match vlan-id-list
-show configuration interfaces | display set | match vlan-tags
-show configuration interfaces | display set | match disable
-show configuration interfaces | display set | match deactivate
+show configuration interfaces | display set | match "policer output"
+show configuration interfaces | display set | match "vlan-id|vlan-id-list|vlan-tags outer"
+show configuration interfaces | display set | match "disable|deactivate"
