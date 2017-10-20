@@ -41,7 +41,7 @@ def sql_request(query):
 		results = cursor.fetchall()
 		return results
 	except MySQLdb.Error, e:
-		sql_log_file = open("SQL_Error_Log.txt", "a")
+		sql_log_file = open("sql_err.log", "a")
 		print >>sql_log_file, str(datetime.datetime.now()) + ": Error %d: %s" % (e.args[0],e.args[1])
 		sql_log_file.close()
 		check_sql = False
@@ -66,7 +66,7 @@ def sql_updater(command,values):
 		cursor.execute(command,values)
 		sql_conn.commit()
 	except MySQLdb.Error, e:
-		sql_log_file = open("SQL_Error_Log.txt", "a")
+		sql_log_file = open("sql_err.log", "a")
 		print >>sql_log_file, str(datetime.datetime.now()) + ": Error %d: %s" % (e.args[0],e.args[1])
 		sql_log_file.close()
 		check_sql = False
@@ -255,4 +255,4 @@ create_threads()
 if check_sql == True:
 	print "\nAll parameters were successfully exported to MySQL."
 else:
-	print "\nThere was a problem exporting data to MySQL.\n* Check the files, database and SQL_Error_Log.txt.\n"
+	print "\nThere was a problem exporting data to MySQL.\n* Check the files, database and sql_err.log.\n"
