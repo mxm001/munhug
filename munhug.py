@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-Connects to a device running JUNOS and export device and interfaces configuration information to a mySQL database.
+Connect to a device running JUNOS and export device and interfaces configuration information to a mySQL database.
 
 Use: "python filename sshcredentialsfile commandsfile sqlcredentialsfile"
 - SSH and SQL credentials provided in plain text, comma (',') separated, no whitespaces.
