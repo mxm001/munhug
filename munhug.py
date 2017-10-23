@@ -36,7 +36,6 @@ def sql_request(query):
 	try:
 		sql_conn = MySQLdb.connect(sql_host, sql_username, sql_password, sql_database)
 		cursor = sql_conn.cursor()
-		cursor.execute("USE MunHug")
 		cursor.execute(query)
 		results = cursor.fetchall()
 		return results
@@ -62,7 +61,6 @@ def sql_updater(command,values):
 	try:
 		sql_conn = MySQLdb.connect(sql_host, sql_username, sql_password, sql_database)
 		cursor = sql_conn.cursor()
-		cursor.execute("USE MunHug")
 		cursor.execute(command,values)
 		sql_conn.commit()
 	except MySQLdb.Error, e:
