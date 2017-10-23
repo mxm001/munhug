@@ -19,6 +19,7 @@ import sys
 import re
 
 global_ip_list = []
+date_global = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d')
 check_sql = True
 
 def sql_request(query):
@@ -218,8 +219,7 @@ def ssh_conn(ip):
 					ifInactive = each_saved[0]
 					unitInactive = each_saved[1]
 					descInactive = each_saved[2]
-					date_removed = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d') #%H:%M
-					state = 'Removed on ' + date_removed
+					state = 'Removed on ' + date_global
 					state_update_statement = 'UPDATE Units SET State=%s WHERE IfName=%s AND UnitNum=%s AND UnitDesc=%s'
 					state_update_vars = [state,ifInactive,unitInactive,descInactive]
 					sql_updater(state_update_statement,state_update_vars)
