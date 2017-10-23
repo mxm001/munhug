@@ -37,7 +37,7 @@ def sql_request(query):
 		sql_conn = MySQLdb.connect(sql_host, sql_username, sql_password, sql_database)
 		cursor = sql_conn.cursor()
 		cursor.execute(query)
-		results = cursor.fetchall()
+		results = list(cursor)
 		return results
 	except MySQLdb.Error, e:
 		sql_log_file = open("sql_err.log", "a")
@@ -203,8 +203,12 @@ def ssh_conn(ip):
 			#print servVlanType
 			#print serviceVlan
 			#print serviceBw
+			
+			info_insert_statement = 'INSERT INTO Units (Host_ID,IfName,UnitNum,UnitDesc,ServiceIus,Vlan_Type,Vlan_ID,BW_Policy,BW_Speed,BW_Desc,State) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE UnitDesc=%s, ServiceIus=%s, Vlan_Type=%s, Vlan_ID=%s, BW_Policy=%s, BW_Speed=%s, BW_Desc=%s, State=%s'
 
-			sql_updater('INSERT INTO Units (Host_ID,IfName,UnitNum,UnitDesc,ServiceIus,Vlan_Type,Vlan_ID,BW_Policy,BW_Speed,BW_Desc,State) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE UnitDesc=%s, ServiceIus=%s, Vlan_Type=%s, Vlan_ID=%s, BW_Policy=%s, BW_Speed=%s, BW_Desc=%s, State=%s',(hostId,serviceIf,unitNum,unitDesc,serviceUid,servVlanType,serviceVlan,serviceBwPol,serviceBw,serviceBwDesc,state,unitDesc,serviceUid,servVlanType,serviceVlan,serviceBwPol,serviceBw,serviceBwDesc,state))
+			info_insert_vars = (hostId,serviceIf,unitNum,unitDesc,serviceUid,servVlanType,serviceVlan,serviceBwPol,serviceBw,serviceBwDesc,state,unitDesc,serviceUid,servVlanType,serviceVlan,serviceBwPol,serviceBw,serviceBwDesc,state)
+
+			sql_updater(info_insert_statement,info_insert_vars)
 
 			#Check for erased interface, unit numer, unit description.
 			saved_services_query = 'SELECT IfName,UnitNum,UnitDesc FROM Units WHERE Host_ID = ' + str(hostId)  + ' AND State NOT LIKE "Removed%"'
@@ -214,7 +218,7 @@ def ssh_conn(ip):
 					ifInactive = each_saved[0]
 					unitInactive = each_saved[1]
 					descInactive = each_saved[2]
-					date_removed = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M')
+					date_removed = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d') #%H:%M
 					state = 'Removed on ' + date_removed
 					sql_updater('UPDATE Units SET State=%s WHERE IfName=%s AND UnitNum=%s AND UnitDesc=%s',(state,ifInactive,unitInactive,descInactive))
 
