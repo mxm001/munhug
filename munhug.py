@@ -206,7 +206,7 @@ def ssh_conn(ip):
 			
 			info_insert_statement = 'INSERT INTO Units (Host_ID,IfName,UnitNum,UnitDesc,ServiceIus,Vlan_Type,Vlan_ID,BW_Policy,BW_Speed,BW_Desc,State) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE UnitDesc=%s, ServiceIus=%s, Vlan_Type=%s, Vlan_ID=%s, BW_Policy=%s, BW_Speed=%s, BW_Desc=%s, State=%s'
 
-			info_insert_vars = (hostId,serviceIf,unitNum,unitDesc,serviceUid,servVlanType,serviceVlan,serviceBwPol,serviceBw,serviceBwDesc,state,unitDesc,serviceUid,servVlanType,serviceVlan,serviceBwPol,serviceBw,serviceBwDesc,state)
+			info_insert_vars = [hostId,serviceIf,unitNum,unitDesc,serviceUid,servVlanType,serviceVlan,serviceBwPol,serviceBw,serviceBwDesc,state,unitDesc,serviceUid,servVlanType,serviceVlan,serviceBwPol,serviceBw,serviceBwDesc,state]
 
 			sql_updater(info_insert_statement,info_insert_vars)
 
@@ -220,7 +220,9 @@ def ssh_conn(ip):
 					descInactive = each_saved[2]
 					date_removed = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d') #%H:%M
 					state = 'Removed on ' + date_removed
-					sql_updater('UPDATE Units SET State=%s WHERE IfName=%s AND UnitNum=%s AND UnitDesc=%s',(state,ifInactive,unitInactive,descInactive))
+					state_update_statement = 'UPDATE Units SET State=%s WHERE IfName=%s AND UnitNum=%s AND UnitDesc=%s'
+					state_update_vars = [state,ifInactive,unitInactive,descInactive]
+					sql_updater(state_update_statement,state_update_vars)
 
 		#print device_output + "\n"
 
