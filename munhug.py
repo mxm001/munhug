@@ -120,7 +120,8 @@ def ssh_conn(ip):
 		dev_os = ext_dev_os.group(1)
 
 		host_update_query = "UPDATE Hosts SET Hostname = %s, Model = %s, DeviceOS = %s WHERE MgmtAddress = %s"
-		sql_updater(host_update_query,(dev_hostname,dev_model,dev_os,ip))
+		host_update_vars = [dev_hostname,dev_model,dev_os,ip]
+		sql_updater(host_update_query,host_update_vars)
 
 		#Filter unit descriptions
 		ext_iface_desc_values = re.findall(r"set interfaces (.+) unit (.+) description (.+?)\r", device_output)
