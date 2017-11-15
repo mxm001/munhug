@@ -1,39 +1,11 @@
-MariaDB [MunHug]> show create table Hosts \G
-*************************** 1. row ***************************
-       Table: Hosts
-Create Table: CREATE TABLE `Hosts` (
-  `HostID` int(11) NOT NULL AUTO_INCREMENT,
-  `Hostname` varchar(15) DEFAULT NULL,
-  `MgmtAddress` varchar(20) NOT NULL,
-  `Model` varchar(20) DEFAULT NULL,
-  `DeviceOS` varchar(20) DEFAULT NULL,
-  PRIMARY KEY (`HostID`,`MgmtAddress`),
-  UNIQUE KEY `MgmtAddress` (`MgmtAddress`)
-) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=latin1
-1 row in set (0.00 sec)
+MySQL commands:
 
-MariaDB [MunHug]> show create table Units \G
-*************************** 1. row ***************************
-       Table: Units
-Create Table: CREATE TABLE `Units` (
-  `UnitID` int(11) NOT NULL AUTO_INCREMENT,
-  `Host_ID` int(11) NOT NULL,
-  `IfName` varchar(20) DEFAULT NULL,
-  `UnitNum` varchar(11) DEFAULT NULL,
-  `UnitDesc` varchar(40) DEFAULT NULL,
-  `ServiceIus` varchar(10) DEFAULT NULL,
-  `Vlan_Type` varchar(40) DEFAULT NULL,
-  `Vlan_ID` varchar(20) DEFAULT NULL,
-  `BW_Policy` varchar(20) DEFAULT NULL,
-  `BW_Speed` int(10) unsigned DEFAULT NULL,
-  `BW_Desc` int(10) unsigned DEFAULT NULL,
-  `State` varchar(40) DEFAULT NULL,
-  PRIMARY KEY (`UnitID`),
-  UNIQUE KEY `UQ_Service` (`Host_ID`,`IfName`,`UnitNum`),
-  CONSTRAINT `Units_ibfk_1` FOREIGN KEY (`Host_ID`) REFERENCES `Hosts` (`HostID`)
-) ENGINE=InnoDB AUTO_INCREMENT=35652 DEFAULT CHARSET=latin1
-1 row in set (0.00 sec)
-
+FLUSH PRIVILEGES;
+SET PASSWORD FOR 'root'@'localhost' = PASSWORD('asdqwe123');
+create user 'munhug'@'localhost' identified by 'python';
+create database MunHug;
+GRANT ALL PRIVILEGES ON MunHug.* TO 'munhug'@'localhost';
+pager less -SFX
 
 CREATE TABLE Hosts (
     HostID int NOT NULL AUTO_INCREMENT,
@@ -63,4 +35,3 @@ CREATE TABLE `Units` (
   UNIQUE KEY `UQ_Service` (`Host_ID`,`IfName`,`UnitNum`),
   FOREIGN KEY (`Host_ID`) REFERENCES `Hosts` (`HostID`)
 );
-
