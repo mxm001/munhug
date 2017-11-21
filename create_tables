@@ -1,3 +1,12 @@
+MySQL commands:
+
+FLUSH PRIVILEGES;
+SET PASSWORD FOR 'root'@'localhost' = PASSWORD('asdqwe123');
+create user 'munhug'@'localhost' identified by 'python';
+create database MunHug;
+GRANT ALL PRIVILEGES ON MunHug.* TO 'munhug'@'localhost';
+pager less -SFX
+
 CREATE TABLE Hosts (
     HostID int NOT NULL AUTO_INCREMENT,
     Hostname VARCHAR(15),
@@ -26,4 +35,3 @@ CREATE TABLE `Units` (
   UNIQUE KEY `UQ_Service` (`Host_ID`,`IfName`,`UnitNum`),
   FOREIGN KEY (`Host_ID`) REFERENCES `Hosts` (`HostID`)
 );
-
