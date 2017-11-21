@@ -229,6 +229,7 @@ def ssh_conn(ip):
 
 		#Close SSH session
 		session.close()
+		print date_global
 
 	#Catch SSH authentication exceptions
 	except paramiko.AuthenticationException:
